@@ -1,7 +1,7 @@
 all: cdoc
 
 test: cdoc
-	./cdoc cert.* > out.html
+	./cdoc *.c *.h > out.html
 
 tmp.css:
 	cat src/css/*.css > $@
