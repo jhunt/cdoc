@@ -1,0 +1,221 @@
+#!/usr/bin/perl -w
+
+use Text::Markdown 'markdown';
+
+our $state = 'null';
+our $data  = '';
+our @stream = ();
+our %frag = ();
+
+sub fragments()
+{
+	my %h = ();
+	my $key = ''; my $val = '';
+	while (<DATA>) {
+		if (m/^-[a-z]+-{6,}/) {
+			if ($val ne '') { $h{$key} = $val; }
+
+			chomp;
+			s/^-([a-z]+)-{6,}/$1/;
+			$key = $_;
+			$val = '';
+			next;
+		}
+		$val .= $_;
+	}
+	if ($val ne '') { $h{$key} = $val; }
+	close DATA;
+	return %h;
+}
+
+sub putfile($$)
+{
+	my $file = shift;
+	my $data = shift;
+
+	open  $fh, ">$file";
+	print $fh $data;
+	close $fh;
+}
+
+sub proto($)
+{
+	$_ = shift;
+	s/\s+{.*//s;
+	return $_;
+}
+
+sub objkey($)
+{
+	$_ = shift;
+	s/\s*\(.*//;
+	s/.*\s+\**//;
+	return $_;
+}
+
+sub pretty($)
+{
+	$_ = shift;
+	s/\$([a-zA-Z0-9_]+)/<var>$1<\/var>/g;
+	return markdown($_);
+}
+
+sub summary($)
+{
+	$_ = shift;
+	s/\n\n+.*//s;
+	return $_;
+}
+
+sub detail($)
+{
+	$_ = shift;
+	s/[^\n]*\n\n+//;
+	return $_;
+}
+
+sub mapstream
+{
+	my %map = ();
+	my $h;
+	my $comment = '';
+	my $file = '';
+	my $line = 0;
+
+	for (@_) {
+		my ($op, $s) = @{$_};
+		if ($op eq 'comment') {
+			$comment = $s;
+		} elsif ($op eq 'file') {
+			$file = $s;
+		} elsif ($op eq 'line') {
+			$line = $s;
+		} elsif ($comment ne '') {
+			$h = {};
+			$h->{file}      = $file;
+			$h->{line}      = $line;
+			$h->{summary}   = summary($comment);
+			$h->{comment}   = detail($comment);
+			$h->{prototype} = proto($s);
+			$h->{code}      = $s;
+			$map{objkey($h->{prototype})} = $h;
+
+			$comment = '';
+		}
+	}
+
+	return %map;
+}
+
+sub parsefile($)
+{
+	my $file = shift;
+
+	push @stream, ['file', $file];
+	my $io;
+	open  $io, "<$file";
+	parse($io);
+	close $io;
+}
+
+sub parse($)
+{
+	my $io = shift;
+	my $n = 0; my $line = 0;
+
+	while (<$io>) {
+		$n++;
+		s/\r//g;
+		if (m/^\/\*\*$/) {
+			$state = 'comment';
+			$data = '';
+			next;
+		}
+
+		if ($state eq 'comment') {
+			if (m/^\s*\*\/$/) {
+				push @stream, ['comment', $data];
+				$state = 'code'; $data = ''; $line = $n;
+				next;
+			}
+			s/.*\* *//;
+			$data .= $_;
+			next;
+		}
+
+		if ($state eq 'code') {
+			$data .= $_;
+			if (/^};?$/) {
+				push @stream, ['line', $line+1];
+				push @stream, ['code', $data];
+				$state = 'null'; $data = '';
+				next;
+			}
+		}
+	}
+
+	$state = 'null'; $data = '';
+}
+
+sub output()
+{
+	print $frag{header};
+	my %map = mapstream(@stream);
+	for my $name (sort keys %map) {
+		my %o = %{$map{$name}};
+		$o{comment} = pretty($o{comment});
+		$o{summary} = pretty($o{summary});
+		$o{summary} =~ s/<p>/<p class="summary">/;
+
+		print "    <div class=\"doc\" id=\"$name\">\n";
+		print "      <h2>$name</h2>\n\n";
+		print "      <p class=\"prototype\">$o{prototype}</p>\n\n";
+		print $o{summary};
+		print $o{comment};
+		print "\n";
+		print "      <a href=\"#\" class=\"source\"><code>$o{file}:$o{line}</code></a>\n";
+		print "      <pre class=\"source\" id=\"src_$name\"><code>$o{code}</code></pre>\n\n";
+		print "    </div>\n\n";
+	}
+	print $frag{footer};
+}
+
+for my $f (@ARGV) {
+	print STDERR "> $f...\n";
+	parsefile($f);
+}
+
+%frag = fragments();
+output();
+putfile "cdoc.css", $frag{css};
+putfile "cdoc.js",  $frag{js};
+
+__DATA__
+-header-----------------------------------------------------------
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Clockwork API Docs</title>
+  <link rel="stylesheet" type="text/css" href="cdoc.css" />
+</head>
+<body class="api">
+  <h1 id="title"><span>Clockwork API Docs</span></h1>
+  <div id="s">
+    <ul class="nav">
+      <li><a href="/">Home</a></li>
+      <li><a href="/downloads/">Downloads</a></li>
+      <li><a href="/docs/">Documentation</a></li>
+      <li><a href="/roadmap">Roadmap</a></li>
+      <li><a href="/contact">Feedback</a></li>
+    </ul>
+  </div>
+  <div id="m">
+-footer-----------------------------------------------------------
+  </div>
+  <script type="text/javascript" src="cdoc.js"></script>
+</body>
+</html>
+-css--------------------------------------------------------------
+/* INSERT CSS */
+-js---------------------------------------------------------------
+/* INSERT JS */

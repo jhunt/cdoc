@@ -1,0 +1,7 @@
+images/
+*.html
+*.h
+*.c
+cdoc
+cdoc.js
+cdoc.css
