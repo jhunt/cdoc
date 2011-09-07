@@ -17,6 +17,7 @@ sub debug2 { if ($V >= 2) { print STDERR @_; } }
 
 sub get_options()
 {
+	my $theme   = '';
 	my $header  = '';
 	my $footer  = '';
 	my $css     = '';
@@ -36,12 +37,21 @@ sub get_options()
 		'css=s'    => \$css,
 		'C=s'      => \$css,
 
+		'theme=s'  => \$theme,
+		'T=s'      => \$theme,
+
 		'verbose+' => \$V,
 		'v+'       => \$V,
 
 		'help'     => \$help,
 		'h'        => \$help
 	);
+
+	if ($theme ne '') {
+		if ($header eq '') { $header = "$theme/header.html"; }
+		if ($footer eq '') { $footer = "$theme/footer.html"; }
+		if ($css    eq '') { $css    = "$theme/style.css";   }
+	}
 
 	$opts{header} = $header;
 	$opts{footer} = $footer;
@@ -57,6 +67,12 @@ sub get_options()
 		print "Options:\n";
 		print " --strip path   Path component to remove from source file names.\n";
 		print " -s path\n";
+		print "\n";
+		print " --theme dir    Override the default header, footer and CSS content\n";
+		print " -T dir         by using the `header.html', `footer.html' and `style.css'\n";
+		print "                files found in dir; a rudimentary form of theming.\n";
+		print "\n";
+		print "                Note: the -H, -F and -C options override -T.\n";
 		print "\n";
 		print " --header file  Specify an alternate HTML fragment to use for\n";
 		print " -H file        the beginning chunk of the output document.\n";
