@@ -50,11 +50,21 @@ sub is_struct($)
 	return m/^struct\s+\S+\s*{/;
 }
 
+sub is_macro($)
+{
+	$_ = shift;
+	return m/^#define \w+\s*\(/;
+}
+
 sub proto($)
 {
 	$_ = shift;
 	if (is_typedef_struct $_) {
 		s/\s*{.*}\s+(\w+);.*/ { ... } $1/s;
+		return $_;
+	}
+	if (is_macro $_) {
+		s/^#define\s*([^\)]+\)).*/$1/s;
 		return $_;
 	}
 	s/\s+{.*//s;
@@ -70,6 +80,10 @@ sub objkey($)
 	}
 	if (is_struct $_) {
 		s/\s+{.*//s;
+		return $_;
+	}
+	if (is_macro $_) {
+		s/^#define\s*([^\(]+)\(.*/$1/s;
 		return $_;
 	}
 	#if (m/^struct\s+\S+$/) { return $_; }
@@ -141,6 +155,9 @@ sub mapstream
 			$h->{line}      = $line;
 			$h->{summary}   = summary($comment);
 			$h->{comment}   = detail($comment);
+			if ($h->{comment} eq $h->{summary}) {
+				$h->{comment} = '';
+			}
 			$h->{prototype} = proto($s);
 			$h->{code}      = $s;
 			$map{$k} = $h;
@@ -167,13 +184,22 @@ sub parse($)
 {
 	my $io = shift;
 	my $n = 0; my $line = 0;
+	my $type = '';
+	my $proto = '';
 
 	while (<$io>) {
 		$n++;
 		s/\r//g;
-		if (m/^\/\*\*$/) {
-			$state = 'comment';
-			$data = '';
+		if (m/^\/\*\*/) { # are we at the start of a comment?
+			s/^\/\*\*\s+//;
+			if (m/\*\/$/) { # is it a single-line comment?
+				s/\s*\*\/$//;
+				push @stream, ['comment', $_];
+				$state = 'code'; $data = ''; $line = $n;
+			} else {
+				$state = 'comment';
+				$data = '';
+			}
 			next;
 		}
 
@@ -188,10 +214,18 @@ sub parse($)
 		}
 
 		if ($state eq 'code') {
+			if ($data eq '') {
+				$type = m/^#define/ ? 'macro' : 'other';
+			}
 			$data .= $_;
-			if (/^}(\s+\w+)?;?$/) {
+			if (($type ne 'macro' and /^}(\s+\w+)?;?$/)
+			 || ($type eq 'macro' and /^\s*$/)) {
 				push @stream, ['line', $line+1];
 				push @stream, ['code', $data];
+
+				$proto = objkey($data);
+				print STDERR "  - $proto\n";
+
 				$state = 'null'; $data = '';
 				next;
 			}
@@ -227,6 +261,8 @@ sub output()
 		if ($o{type} ne 'struct') {
 			print "      <a href=\"#\" class=\"source\"><code>$o{file}:$o{line}</code></a>\n";
 			print "      <pre class=\"source\" id=\"src_$name\"><code>$o{code}</code></pre>\n\n";
+		} else {
+			print "      <code>$o{file}:$o{line}</code>\n";
 		}
 		print "    </div>\n\n";
 	}
