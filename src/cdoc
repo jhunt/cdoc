@@ -1,11 +1,85 @@
 #!/usr/bin/perl -w
 
+use strict;
 use Text::Markdown 'markdown';
+use Getopt::Long;
 
 our $state = 'null';
 our $data  = '';
 our @stream = ();
 our %frag = ();
+
+our %opts = ();
+our $V = 0;
+
+sub debug1 { if ($V >= 1) { print STDERR @_; } }
+sub debug2 { if ($V >= 2) { print STDERR @_; } }
+
+sub get_options()
+{
+	my $header  = '';
+	my $footer  = '';
+	my $css     = '';
+	my $help    = 0;
+	my $strip   = './';
+	Getopt::Long::Configure('bundling');
+	GetOptions(
+		'strip=s'  => \$strip,
+		's=s'      => \$strip,
+
+		'header=s' => \$header,
+		'H=s'      => \$header,
+
+		'footer=s' => \$footer,
+		'F=s'      => \$footer,
+
+		'css=s'    => \$css,
+		'C=s'      => \$css,
+
+		'verbose+' => \$V,
+		'v+'       => \$V,
+
+		'help'     => \$help,
+		'h'        => \$help
+	);
+
+	$opts{header} = $header;
+	$opts{footer} = $footer;
+	$opts{css}    = $css;
+	$opts{strip}  = $strip;
+
+	debug1 "Setting verbosity to $V\n";
+
+	if ($help) {
+		print "$0 - C Documentor\n";
+		print "USAGE: $0 [options] file [ file ... ]\n";
+		print "\n";
+		print "Options:\n";
+		print " --strip path   Path component to remove from source file names.\n";
+		print " -s path\n";
+		print "\n";
+		print " --header file  Specify an alternate HTML fragment to use for\n";
+		print " -H file        the beginning chunk of the output document.\n";
+		print "                If not specified, a suitable default (bundled with\n";
+		print "                cdoc) will be used.\n";
+		print "\n";
+		print " --footer file  Specify an alternate HTML fragment to use for\n";
+		print " -F file        the ending chunk of the output document.\n";
+		print "                If not specified, a suitable default (bundled with\n";
+		print "                cdoc) will be used.\n";
+		print "\n";
+		print " -css file      Specify an alternate Cascading Stylesheet for the\n";
+		print " -C file        output document.  If not specified, a suitable default\n";
+		print "                (bundled with cdoc) will be used.\n";
+		print "\n";
+		print " --help, -h     Show this help screen.\n";
+		print "\n";
+		print " --verbose      Generate more output; can be used more than once.\n";
+		print " -v\n";
+		print "\n";
+		exit(0);
+	}
+}
 
 sub fragments()
 {
@@ -25,7 +99,20 @@ sub fragments()
 	}
 	if ($val ne '') { $h{$key} = $val; }
 	close DATA;
+
+	# Override from %opts
+	if ($opts{header} ne '') { $h{header} = getfile($opts{header}); }
+	if ($opts{footer} ne '') { $h{footer} = getfile($opts{footer}); }
+	if ($opts{css}    ne '') { $h{css}    = getfile($opts{css});    }
+
 	return %h;
+}
+
+sub bail($)
+{
+	my $error = shift;
+	print "$error\n";
+	exit(3);
 }
 
 sub putfile($$)
@@ -33,9 +120,23 @@ sub putfile($$)
 	my $file = shift;
 	my $data = shift;
 
+	my $fh;
 	open  $fh, ">$file";
 	print $fh $data;
 	close $fh;
+}
+
+sub getfile($$)
+{
+	my $file = shift;
+	my $data = '';
+
+	my $fh;
+	open  $fh, "<$file" or bail("$file: $!");
+	while (<$fh>) { $data .= $_; }
+	close $fh;
+
+	return $data;
 }
 
 sub is_typedef_struct($)
@@ -54,6 +155,13 @@ sub is_macro($)
 {
 	$_ = shift;
 	return m/^#define \w+\s*\(/;
+}
+
+sub filename($)
+{
+	my $_ = shift;
+	s/^$opts{strip}//;
+	return $_;
 }
 
 sub proto($)
@@ -138,7 +246,7 @@ sub mapstream
 		if ($op eq 'comment') {
 			$comment = $s;
 		} elsif ($op eq 'file') {
-			$file = $s;
+			$file = filename($s);
 		} elsif ($op eq 'line') {
 			$line = $s;
 		} elsif ($comment ne '') {
@@ -224,7 +332,7 @@ sub parse($)
 				push @stream, ['code', $data];
 
 				$proto = objkey($data);
-				print STDERR "  - $proto\n";
+				debug2 "  - $proto\n";
 
 				$state = 'null'; $data = '';
 				next;
@@ -269,42 +377,15 @@ sub output()
 	print $frag{footer};
 }
 
+get_options();
+%frag = fragments();
+
 for my $f (@ARGV) {
-	print STDERR "> $f...\n";
+	debug1 "> $f...\n";
 	parsefile($f);
 }
 
-%frag = fragments();
 output();
 putfile "cdoc.css", $frag{css};
 putfile "cdoc.js",  $frag{js};
 
-__DATA__
--header-----------------------------------------------------------
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Clockwork API Docs</title>
-  <link rel="stylesheet" type="text/css" href="cdoc.css" />
-</head>
-<body class="api">
-  <h1 id="title"><span>Clockwork API Docs</span></h1>
-  <div id="s">
-    <ul class="nav">
-      <li><a href="/">Home</a></li>
-      <li><a href="/downloads/">Downloads</a></li>
-      <li><a href="/docs/">Documentation</a></li>
-      <li><a href="/roadmap">Roadmap</a></li>
-      <li><a href="/contact">Feedback</a></li>
-    </ul>
-  </div>
-  <div id="m">
--footer-----------------------------------------------------------
-  </div>
-  <script type="text/javascript" src="cdoc.js"></script>
-</body>
-</html>
--css--------------------------------------------------------------
-/* INSERT CSS */
--js---------------------------------------------------------------
-/* INSERT JS */
