@@ -14,8 +14,8 @@ It also doesn't work with other languages, even the *C-like* ones.
 [Clockwork][1], while maintaining the visual appeal of the project
 web site.
 
-Building an Installing cdoc
----------------------------
+Building and Installing cdoc
+----------------------------
 
 To build it, run `make`.
 
