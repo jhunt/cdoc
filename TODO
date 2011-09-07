@@ -4,6 +4,5 @@ cdoc TODO list
  - Options for overriding header / footer and CSS
  - Path stripping
  - Handle #define macro functions
- - Handle typedef'd structs
 
 

@@ -38,9 +38,25 @@ sub putfile($$)
 	close $fh;
 }
 
+sub is_typedef_struct($)
+{
+	$_ = shift;
+	return m/^typedef\s+struct/;
+}
+
+sub is_struct($)
+{
+	$_ = shift;
+	return m/^struct\s+\S+\s*{/;
+}
+
 sub proto($)
 {
 	$_ = shift;
+	if (is_typedef_struct $_) {
+		s/\s*{.*}\s+(\w+);.*/ { ... } $1/s;
+		return $_;
+	}
 	s/\s+{.*//s;
 	return $_;
 }
@@ -48,8 +64,25 @@ sub proto($)
 sub objkey($)
 {
 	$_ = shift;
+	if (is_typedef_struct $_) {
+		s/typedef\s+struct\s+{.*}\s+(\w+);.*/$1/s;
+		return $_;
+	}
+	if (is_struct $_) {
+		s/\s+{.*//s;
+		return $_;
+	}
+	#if (m/^struct\s+\S+$/) { return $_; }
+	s/\s+{.*//s;
 	s/\s*\(.*//;
 	s/.*\s+\**//;
+	return $_;
+}
+
+sub key2id($)
+{
+	$_ = shift;
+	s/\s+/-/g;
 	return $_;
 }
 
@@ -81,7 +114,7 @@ sub detail($)
 sub mapstream
 {
 	my %map = ();
-	my $h;
+	my $h; my $k;
 	my $comment = '';
 	my $file = '';
 	my $line = 0;
@@ -96,13 +129,21 @@ sub mapstream
 			$line = $s;
 		} elsif ($comment ne '') {
 			$h = {};
+			$k = objkey($s);
+			if (is_typedef_struct($s) or is_struct($s)) {
+				$h->{type} = 'struct';
+				$k = "001:$k";
+			} else {
+				$h->{type} = 'function';
+				$k = "050:$k";
+			}
 			$h->{file}      = $file;
 			$h->{line}      = $line;
 			$h->{summary}   = summary($comment);
 			$h->{comment}   = detail($comment);
 			$h->{prototype} = proto($s);
 			$h->{code}      = $s;
-			$map{objkey($h->{prototype})} = $h;
+			$map{$k} = $h;
 
 			$comment = '';
 		}
@@ -142,14 +183,13 @@ sub parse($)
 				$state = 'code'; $data = ''; $line = $n;
 				next;
 			}
-			s/.*\* *//;
 			$data .= $_;
 			next;
 		}
 
 		if ($state eq 'code') {
 			$data .= $_;
-			if (/^};?$/) {
+			if (/^}(\s+\w+)?;?$/) {
 				push @stream, ['line', $line+1];
 				push @stream, ['code', $data];
 				$state = 'null'; $data = '';
@@ -167,18 +207,27 @@ sub output()
 	my %map = mapstream(@stream);
 	for my $name (sort keys %map) {
 		my %o = %{$map{$name}};
+		$name =~ s/.\d+://;
+
 		$o{comment} = pretty($o{comment});
 		$o{summary} = pretty($o{summary});
 		$o{summary} =~ s/<p>/<p class="summary">/;
 
-		print "    <div class=\"doc\" id=\"$name\">\n";
+		print "    <div class=\"doc $o{type}\" id=\"", key2id($name), "\">\n";
 		print "      <h2>$name</h2>\n\n";
-		print "      <p class=\"prototype\">$o{prototype}</p>\n\n";
+		if ($o{type} ne 'struct') {
+			print "      <p class=\"prototype\">$o{prototype}</p>\n\n";
+		}
 		print $o{summary};
+		if ($o{type} eq 'struct') {
+			print "      <pre class=\"struct\">$o{code}</pre>\n";
+		}
 		print $o{comment};
 		print "\n";
-		print "      <a href=\"#\" class=\"source\"><code>$o{file}:$o{line}</code></a>\n";
-		print "      <pre class=\"source\" id=\"src_$name\"><code>$o{code}</code></pre>\n\n";
+		if ($o{type} ne 'struct') {
+			print "      <a href=\"#\" class=\"source\"><code>$o{file}:$o{line}</code></a>\n";
+			print "      <pre class=\"source\" id=\"src_$name\"><code>$o{code}</code></pre>\n\n";
+		}
 		print "    </div>\n\n";
 	}
 	print $frag{footer};
