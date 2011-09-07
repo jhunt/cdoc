@@ -154,7 +154,8 @@ form #name { font-size: 120%; width: 16.67em; }
 #f .license a { display: block; }
 
 
-body.api pre { font-size: 10pt; overflow: auto; display: none; }
+body.api pre { font-size: 10pt; overflow: auto; background-color: #555;}
+body.api pre.source  { display: none; background-color: #333; }
 body.api pre.visible { display: block; }
 body.api .doc { margin-bottom: 4em; padding-top: 1px; }
 body.api .doc h2 { border-bottom: 1px solid #2a2269; margin-bottom: 0.4em; padding-bottom: 0.1em; }
