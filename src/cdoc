@@ -309,13 +309,14 @@ sub parse($)
 {
 	my $io = shift;
 	my $n = 0; my $line = 0;
+	my $first = 0;
 	my $type = '';
 	my $proto = '';
 
 	while (<$io>) {
 		$n++;
 		s/\r//g;
-		if (m/^\/\*\*/) { # are we at the start of a comment?
+		if (m/^\/\*\*(\s|$)/) { # are we at the start of a comment?
 			s/^\/\*\*\s+//;
 			if (m/\*\/$/) { # is it a single-line comment?
 				s/\s*\*\/$//;
@@ -334,17 +335,21 @@ sub parse($)
 				$state = 'code'; $data = ''; $line = $n;
 				next;
 			}
+			s/\s{2}//;
 			$data .= $_;
 			next;
 		}
 
 		if ($state eq 'code') {
+			$first = 0;
 			if ($data eq '') {
 				$type = m/^#define/ ? 'macro' : 'other';
+				$first = 1;
 			}
 			$data .= $_;
 			if (($type ne 'macro' and /^}(\s+\w+)?;?$/)
-			 || ($type eq 'macro' and /^\s*$/)) {
+			 || ($type eq 'macro' and /^\s*$/)
+			 || ($type ne 'macro' and $first and /\s+}$/)) {
 				push @stream, ['line', $line+1];
 				push @stream, ['code', $data];
 
