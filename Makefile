@@ -4,11 +4,17 @@ src_css  := src/css/style.css
 src_js   := src/js/jquery.js
 src_js   += src/js/local.js
 
-all: cdoc
+ROOT:=/usr/local/bin
 
-test: cdoc
-	./cdoc *.c *.h > out.html
-	find ../cfm -name '*.[ch]' 2>/dev/null | grep -v '/test/' | xargs ./cdoc --strip ../cfm/ > out2.html
+default: cdoc
+
+install: cdoc
+	install -m 0755 -o root -g root cdoc $(ROOT)/cdoc
+
+samples: cdoc
+	(cd sample && ../cdoc *.c *.h > index.html)
+	@echo
+	@echo "Point your browser to sample/index.html to see cdoc's handiwork"
 
 cdoc: src/cdoc $(src_html) $(src_css) $(src_js)
 	rm -f cdoc
@@ -25,4 +31,4 @@ cdoc: src/cdoc $(src_html) $(src_css) $(src_js)
 	chmod 500 $@
 
 clean:
-	rm -f cdoc cdoc.css cdoc.js *.html
+	rm -f cdoc sample/cdoc.* sample/*.html
