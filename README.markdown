@@ -28,7 +28,7 @@ Oh yeah, you will need Perl, Text::Markdown and Getopt::Long.
 Getting Help
 ------------
 
-See +cdoc --help+
+See `cdoc --help`
 
 Author
 ------
