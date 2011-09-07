@@ -231,6 +231,7 @@ sub pretty($)
 	s/<code>/<pre><code>/g;
 	s/<\/code>/<\/code><\/pre>/g;
 	s/(<pre><code>)\s*\n/$1/gs;
+	s/#([a-z0-9_]+)/<a href="#$1">$1<\/a>/g;
 	s/\s*\n\s*(<\/code><\/pre>)/$1/gs;
 	return markdown($_);
 }
