@@ -57,6 +57,10 @@ sub pretty($)
 {
 	$_ = shift;
 	s/\$([a-zA-Z0-9_]+)/<var>$1<\/var>/g;
+	s/<code>/<pre><code>/g;
+	s/<\/code>/<\/code><\/pre>/g;
+	s/(<pre><code>)\s*\n/$1/gs;
+	s/\s*\n\s*(<\/code><\/pre>)/$1/gs;
 	return markdown($_);
 }
 
