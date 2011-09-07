@@ -1,0 +1,70 @@
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video { margin: 0; padding: 0; border: 0; font-size: 100%; font: inherit; vertical-align: baseline; }
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section { display: block; }
+body { line-height: 1; }
+ol, ul { list-style: none; }
+blockquote, q { quotes: none; }
+blockquote:before, blockquote:after, q:before, q:after { content: ''; content: none; }
+table { border-collapse: collapse; border-spacing: 0; }
+
+body { font-family: Palatino, "Palatino Linotype", "Hoefler Text", Times, "Times New Roman", serif;
+       width: 960px; font-size: 15pt; padding: 0% 0% 0% 14%; background-color: #fff; }
+h1,h2,h3,h4,h5,h6 { line-height: 0.75em; letter-spacing: -1pt; word-spacing: 0.1em; margin: 2em 0em 0em 0em; }
+h1,h2,h3 { color: #2a2269; font-weight: bold; }
+h4,h5,h6 { color: #333; font-weight: bold; }
+legend,h1 { font-size: 160%; }
+h2 { font-size: 150%; }
+h3 { font-size: 140%; font-style: italic; }
+h4 { font-size: 125%; }
+h5 { font-size: 110%; }
+h6 { font-size: 100%; font-style: italic; }
+p { margin: 1em 0em; line-height: 1.3em; text-align: justify; }
+a { color: #1c00ff; font-weight: bold; }
+strong { font-weight: bold; }
+em { color: #333; font-style: italic; font-weight: bold; }
+kbd, samp, code { font-family: monospace; font-size: 90%; font-weight: bold; }
+dfn { color: #333; font-weight: bold; }
+var { color: #333; font-weight: bold; font-family: monospace; }
+cite { font-style: italic; font-size: 110%; }
+dl { margin: 2em 0em; }
+dl dt { width: 5em; font-weight: bold; float: left; text-align: right; padding-right: 1em; }
+dl dd { padding-left: 6em; margin-bottom: 1.5em; }
+q, blockquote { font-size: 120%; line-height: 1.3em; font-style: italic; color: #333; }
+blockquote { padding: 0em 2em; }
+pre { font-size: 10pt; font-family: monospace; white-space: pre;
+	background-color: #333; color: #fff; padding: 1em; margin: 1em 0em 2.5em; }
+pre code { font-weight: normal; }
+ul { padding: 0em 0em 0em 1.3em; }
+ul li:before { content: "\bb\a0"; }
+li { margin: 0.3em 0em; }
+ol { list-style-type: decimal; padding: 0em 0em 0em 2.6em; }
+del, s, strike { text-decoration: line-through; color: #999; }
+ins { color: green; text-decoration: none; }
+sub, sup { position: relative; font-size: 60%; }
+sup { vertical-align: baseline; bottom: 1.3ex; }
+sub { vertical-align: baseline; top: 0.7ex; }
+abbr { color: #333; font-weight: bold; text-decoration: underline; }
+pre.source  { display: none; background-color: #333; }
+pre.visible { display: block; }
+.doc { margin-bottom: 4em; padding-top: 1px; }
+.doc h2 { border-bottom: 1px solid #2a2269; margin-bottom: 0.4em; padding-bottom: 0.1em; }
+.doc .prototype { margin-top: 0em; font-family: monospace; font-size: 10pt; text-align: right; font-weight: bold; }
+.doc .summary { font-size: 130%; }

@@ -1,6 +1,6 @@
 src_html := src/html/header.html
 src_html += src/html/footer.html
-src_css  := src/css/cw.css
+src_css  := src/css/style.css
 src_js   := src/js/jquery.js
 src_js   += src/js/local.js
 
