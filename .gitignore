@@ -1,6 +1,4 @@
 images/
-*.h
-*.c
 cdoc
 cdoc.js
 cdoc.css
