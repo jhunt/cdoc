@@ -77,7 +77,11 @@
   To link out to another function, use the function name,
   prefixed with an 'at' sign (@):
 
-  You may want to check out @foo for more eamples of formatting.
+  You may want to check out @foo for more examples of formatting.
+
+  To get a literal '$' or '@', prefix them with a backslash (\).
+
+  In PHP, you would say \$var = array(), but in Perl it's \@var = ();
 
  */
 int foo(int arg1, char *arg2)
