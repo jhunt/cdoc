@@ -224,15 +224,31 @@ sub key2id($)
 	return $_;
 }
 
-sub pretty($)
+sub htmlify($)
+{
+	$_ = shift; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; return $_;
+}
+
+sub esc($)
 {
 	$_ = shift;
+	my @l = split(/\n/,$_);
+	my $s = '';
+	for (@l) {
+		if (m|</code>|) { $s = ''; }
+		if ($s eq 'code') { $_ = htmlify($_); next; }
+		if (m|<code>|)  { $s = 'code'; }
+	}
+	return join("\n", @l);
+}
+
+sub pretty($)
+{
+	$_ = esc(shift);
 	s/\$([a-zA-Z0-9_]+)/<var>$1<\/var>/g;
-	s/<code>/<pre><code>/g;
-	s/<\/code>/<\/code><\/pre>/g;
-	s/(<pre><code>)\s*\n/$1/gs;
-	s/#([a-z0-9_]+)/<a href="#$1">$1<\/a>/g;
-	s/\s*\n\s*(<\/code><\/pre>)/$1/gs;
+	s|<code>(\s*\n)*|<pre><code>|g;
+	s|\s*\n\s*</code>|</code></pre>|g;
+	s/([^\\])@([a-z0-9_]+)/$1<a href="#$2">$2<\/a>/g;
 	return markdown($_);
 }
 
@@ -390,7 +406,8 @@ sub output()
 		print "\n";
 		if ($o{type} ne 'struct') {
 			print "      <a href=\"#\" class=\"source\"><code>$o{file}:$o{line}</code></a>\n";
-			print "      <pre class=\"source\" id=\"src_$name\"><code>$o{code}</code></pre>\n\n";
+			my $code = htmlify($o{code});
+			print "      <pre class=\"source\" id=\"src_$name\"><code>$code</code></pre>\n\n";
 		} else {
 			print "      <code>$o{file}:$o{line}</code>\n";
 		}
