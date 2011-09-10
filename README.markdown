@@ -14,6 +14,13 @@ It also doesn't work with other languages, even the *C-like* ones.
 [Clockwork][1], while maintaining the visual appeal of the project
 web site.
 
+Transformation from text into HTML is handled by a combination of Perl
+regular expressions and Markdown.  The parser is pretty basic, and
+expects your C code to follow certain conventions.
+
+To see what is possible, run `make samples` and point your web browser
+to `{path-to-codebase}/samples/index.html`.
+
 Building and Installing cdoc
 ----------------------------
 
