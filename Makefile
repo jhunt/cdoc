@@ -12,7 +12,7 @@ install: cdoc
 	install -m 0755 -o root -g root cdoc $(ROOT)/cdoc
 
 samples: cdoc
-	(cd sample && ../cdoc *.c *.h > index.html)
+	./cdoc sample/*.c sample/*.h -R sample --strip sample/
 	@echo
 	@echo "Point your browser to sample/index.html to see cdoc's handiwork"
 

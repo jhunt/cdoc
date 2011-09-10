@@ -23,10 +23,14 @@ sub get_options()
 	my $css     = '';
 	my $help    = 0;
 	my $strip   = './';
+	my $root    = '.';
 	Getopt::Long::Configure('bundling');
 	GetOptions(
 		'strip=s'  => \$strip,
 		's=s'      => \$strip,
+
+		'root=s'   => \$root,
+		'R=s'      => \$root,
 
 		'header=s' => \$header,
 		'H=s'      => \$header,
@@ -57,6 +61,7 @@ sub get_options()
 	$opts{footer} = $footer;
 	$opts{css}    = $css;
 	$opts{strip}  = $strip;
+	$opts{root}   = $root;
 
 	debug1 "Setting verbosity to $V\n";
 
@@ -67,6 +72,9 @@ sub get_options()
 		print "Options:\n";
 		print " --strip path   Path component to remove from source file names.\n";
 		print " -s path\n";
+		print "\n";
+		print " --root path    Place all output in path.  Defaults to current\n";
+		print " -R path        working directory (.).\n";
 		print "\n";
 		print " --theme dir    Override the default header, footer and CSS content\n";
 		print " -T dir         by using the `header.html', `footer.html' and `style.css'\n";
@@ -127,8 +135,8 @@ sub fragments()
 sub bail($)
 {
 	my $error = shift;
-	print "$error\n";
-	exit(3);
+	print STDERR "$error\n";
+	exit(1);
 }
 
 sub putfile($$)
@@ -222,7 +230,6 @@ sub objkey($)
 		s/^#define\s*([^\(]+)\(.*/$1/s;
 		return $_;
 	}
-	#if (m/^struct\s+\S+$/) { return $_; }
 	s/\s+{.*//s;
 	s/\s*\(.*//;
 	s/.*\s+\**//;
@@ -400,7 +407,10 @@ sub parse($)
 
 sub output()
 {
-	print $frag{header};
+	my $out;
+	open $out, ">$opts{root}/index.html" or die "Couldn't open output file: $!";
+
+	print $out $frag{header};
 	my %map = mapstream(@stream);
 	for my $name (sort keys %map) {
 		my %o = %{$map{$name}};
@@ -410,39 +420,46 @@ sub output()
 		$o{summary} = pretty($o{summary});
 		$o{summary} =~ s/<p>/<p class="summary">/;
 
-		print "    <div class=\"doc $o{type}\" id=\"", key2id($name), "\">\n";
-		print "      <h2>$name</h2>\n\n";
+		print $out "    <div class=\"doc $o{type}\" id=\"", key2id($name), "\">\n";
+		print $out "      <h2>$name</h2>\n\n";
 		if ($o{type} ne 'struct' and $o{type} ne 'enum') {
-			print "      <p class=\"prototype\">$o{prototype}</p>\n\n";
+			print $out "      <p class=\"prototype\">$o{prototype}</p>\n\n";
 		}
-		print $o{summary};
+		print $out $o{summary};
 		if ($o{type} eq 'struct' or $o{type} eq 'enum') {
-			print "      <pre class=\"$o{type}\">$o{code}</pre>\n";
+			print $out "      <pre class=\"$o{type}\">$o{code}</pre>\n";
 		}
-		print $o{comment};
-		print "\n";
+		print $out $o{comment};
+		print $out "\n";
 		if ($o{type} ne 'struct') {
-			print "      <a href=\"#\" class=\"source\"><code>$o{file}:$o{line}</code></a>\n";
+			print $out "      <a href=\"#\" class=\"source\"><code>$o{file}:$o{line}</code></a>\n";
 			my $code = htmlify($o{code});
-			print "      <pre class=\"source\" id=\"src_$name\"><code>$code</code></pre>\n\n";
+			print $out "      <pre class=\"source\" id=\"src_$name\"><code>$code</code></pre>\n\n";
 		} else {
-			print "      <code>$o{file}:$o{line}</code>\n";
+			print $out "      <code>$o{file}:$o{line}</code>\n";
 		}
-		print "    </div>\n\n";
+		print $out "    </div>\n\n";
 	}
-	print $frag{footer};
+	print $out $frag{footer};
+
+	close $out;
 }
 
 get_options();
 if (@ARGV == 0) { bail "No source files given."; }
 
 %frag = fragments();
+my $n = 0;
 for my $f (@ARGV) {
+	if (! -f $f) { next; }
+	$n++;
 	debug1 "> $f...\n";
 	parsefile($f);
 }
 
+if ($n == 0) { bail "No source files given."; }
+
 output();
-putfile "cdoc.css", $frag{css};
-putfile "cdoc.js",  $frag{js};
+putfile "$opts{root}/cdoc.css", $frag{css};
+putfile "$opts{root}/cdoc.js",  $frag{js};
 
