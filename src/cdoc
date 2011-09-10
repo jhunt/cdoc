@@ -167,6 +167,18 @@ sub is_struct($)
 	return m/^struct\s+\S+\s*{/;
 }
 
+sub is_typedef_enum($)
+{
+	$_ = shift;
+	return m/^typedef\s+enum/;
+}
+
+sub is_enum($)
+{
+	$_ = shift;
+	return m/^enum\s+\S+\s*{/;
+}
+
 sub is_macro($)
 {
 	$_ = shift;
@@ -198,11 +210,11 @@ sub proto($)
 sub objkey($)
 {
 	$_ = shift;
-	if (is_typedef_struct $_) {
-		s/typedef\s+struct\s+{.*}\s+(\w+);.*/$1/s;
+	if (is_typedef_struct($_) or is_typedef_enum($_)) {
+		s/typedef\s+(struct|enum)\s+{.*}\s+(\w+);.*/$2/s;
 		return $_;
 	}
-	if (is_struct $_) {
+	if (is_struct($_) or is_enum($_)) {
 		s/\s+{.*//s;
 		return $_;
 	}
@@ -288,6 +300,9 @@ sub mapstream
 			$k = objkey($s);
 			if (is_typedef_struct($s) or is_struct($s)) {
 				$h->{type} = 'struct';
+				$k = "005:$k";
+			} elsif (is_typedef_enum($s) or is_enum($s)) {
+				$h->{type} = 'enum';
 				$k = "001:$k";
 			} else {
 				$h->{type} = 'function';
@@ -396,12 +411,12 @@ sub output()
 
 		print "    <div class=\"doc $o{type}\" id=\"", key2id($name), "\">\n";
 		print "      <h2>$name</h2>\n\n";
-		if ($o{type} ne 'struct') {
+		if ($o{type} ne 'struct' and $o{type} ne 'enum') {
 			print "      <p class=\"prototype\">$o{prototype}</p>\n\n";
 		}
 		print $o{summary};
-		if ($o{type} eq 'struct') {
-			print "      <pre class=\"struct\">$o{code}</pre>\n";
+		if ($o{type} eq 'struct' or $o{type} eq 'enum') {
+			print "      <pre class=\"$o{type}\">$o{code}</pre>\n";
 		}
 		print $o{comment};
 		print "\n";
