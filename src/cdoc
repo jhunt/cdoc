@@ -257,12 +257,13 @@ sub esc($)
 sub pretty($)
 {
 	$_ = esc(shift);
-	s|<code>(\s*\n)*|<pre><code>|g;
-	s|\s*\n\s*</code>|</code></pre>|g;
-	s|([^\\])\$([a-zA-Z0-9_]+)|$1<var>$2</var>|g;
-	s|([^\\])@([a-z0-9_]+)|$1<a href="#$2">$2</a>|g;
+	s/<code>(\s*\n)*/<pre><code>/g;
+	s#\s*\n\s*</code>#</code></pre>#g;
+	$_ = markdown($_);
+	s#([^\\]|^)\$([a-zA-Z0-9_]+)#$1<var>$2</var>#g;
+	s/([^\\])@([a-zA-Z0-9_]+)/$1<a href="#$2">$2<\/a>/g;
 	s/\\(\$|@)/$1/g;
-	return markdown($_);
+	return $_;
 }
 
 sub summary($)
