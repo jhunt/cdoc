@@ -1,0 +1,5 @@
+cdoc (1.0.18-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- James Hunt <james@niftylogic.com>  Sat, 25 May 2013 09:46:47 -0400

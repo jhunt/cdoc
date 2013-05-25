@@ -1,0 +1,17 @@
+Source: cdoc
+Section: misc
+Priority: optional
+Maintainer: James Hunt <james@niftylogic.com>
+Build-Depends: markdown, debhelper (>= 8)
+Standards-Version: 3.9.3
+Homepage: http://packages.niftylogic.com/generic/cdoc
+
+Package: cdoc
+Architecture: all
+Depends: markdown, ${misc:Depends}
+Description: C Documentor
+ Automatically finds, extracts and formats comment-based
+ documentation from C projects into pretty web pages.
+ .
+ Designed to produce great looking documentation that is
+ easy to read (aesthetically speaking).
