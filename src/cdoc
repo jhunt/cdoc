@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use Text::Markdown 'markdown';
+use File::Temp qw/tempfile/;
 use Getopt::Long;
 
 our $state = 'null';
@@ -259,6 +259,25 @@ sub esc($)
 		if (m|<code>|)  { $s = 'code'; }
 	}
 	return join("\n", @l);
+}
+
+sub markdown
+{
+	my ($code, $config) = @_;
+
+	# drop the comments
+	$code =~ s|^//.*\n||gm;
+	$code =~ s|(\S)\s+//.*|$1|g;
+
+	my ($fh, $file) = tempfile;
+	binmode($fh, ":utf8");
+	print $fh $code; close $fh;
+	$code = qx(/usr/bin/markdown --html4tags <$file);
+	unlink $file;
+
+	$code =~ s/^\s+//;
+	$code =~ s/\s+$//;
+	return $code;
 }
 
 sub pretty($)

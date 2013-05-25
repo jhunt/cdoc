@@ -1,6 +1,6 @@
 # cdoc
 
-VERSION := 1.0.19
+VERSION := 1.0.20
 
 INSTALL := /usr/bin/install
 INSTALL_DIR := $(INSTALL) -d
