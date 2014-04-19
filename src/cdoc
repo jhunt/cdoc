@@ -482,3 +482,70 @@ output();
 putfile "$opts{root}/cdoc.css", $frag{css};
 putfile "$opts{root}/cdoc.js",  $frag{js};
 
+=head1 NAME
+
+cdoc - Embed Documentation in C Source Code
+
+=head1 SYNOPSIS
+
+cdoc *.h *.c
+
+cdoc --root /docs --theme ~/mytheme *.h *.c
+
+cdoc --strip src src/*.c src/*.h
+
+=head1 DESCRIPTION
+
+cdoc is a small utility that will look at C source and header
+files, extract documentation about structures and functions,
+and render nice, clean HTML documentation to disk.
+
+=head1 OPTIONS
+
+=over
+
+=item B<-s>, B<--strip> PATH
+
+Path component to remove from source file names.
+
+=item B<-R>, B<--root> PATH
+
+Place all output in path.  Defaults to current working directory (.).
+
+=item B<-T>, B<--theme> PATH
+
+Override the default header, footer and CSS content by using the
+C<header.html>, C<footer.html> and C<style.css> files found in the given
+path; a rudimentary form of theming.
+
+Note: the B<--header>, B<--footer> and B<--css> options override
+B<--template>.
+
+=item B<-H>, B<--header> FILE
+
+Specify an alternate HTML fragment to use for the beginning chunk of the
+output document.  If not specified, a suitable default (bundled with cdoc)
+will be used.
+
+=item B<-F>, B<--footer> FILE
+
+Specify an alternate HTML fragment to use for the ending chunk of the output
+document.  If not specified, a suitable default (bundled with cdoc) will be
+used.
+
+=item B<-C>, B<--css> FILE
+
+Specify an alternate Cascading Stylesheet for the output document.  If not
+specified, a suitable default (bundled with cdoc) will be used.
+
+=item B<-v>, B<--verbose>
+
+Generate more output; can be used more than once.
+
+=back
+
+=head1 AUTHOR
+
+Written by James Hunt B<< <james@jameshunt.us> >>.
+
+=cut
