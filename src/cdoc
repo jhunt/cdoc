@@ -165,44 +165,44 @@ sub getfile($$)
 
 sub is_typedef_struct($)
 {
-	$_ = shift;
+	local $_ = shift;
 	return m/^typedef\s+struct/;
 }
 
 sub is_struct($)
 {
-	$_ = shift;
+	local $_ = shift;
 	return m/^struct\s+\S+\s*{/;
 }
 
 sub is_typedef_enum($)
 {
-	$_ = shift;
+	local $_ = shift;
 	return m/^typedef\s+enum/;
 }
 
 sub is_enum($)
 {
-	$_ = shift;
+	local $_ = shift;
 	return m/^enum\s+\S+\s*{/;
 }
 
 sub is_macro($)
 {
-	$_ = shift;
+	local $_ = shift;
 	return m/^#define \w+\s*\(/;
 }
 
 sub filename($)
 {
-	my $_ = shift;
+	local $_ = shift;
 	s/^$opts{strip}//;
 	return $_;
 }
 
 sub proto($)
 {
-	$_ = shift;
+	local $_ = shift;
 	if (is_typedef_struct $_) {
 		s/\s*{.*}\s+(\w+);.*/ { ... } $1/s;
 		return $_;
@@ -217,7 +217,7 @@ sub proto($)
 
 sub objkey($)
 {
-	$_ = shift;
+	local $_ = shift;
 	if (is_typedef_struct($_) or is_typedef_enum($_)) {
 		s/typedef\s+(struct|enum)\s+{.*}\s+(\w+);.*/$2/s;
 		return $_;
@@ -238,20 +238,20 @@ sub objkey($)
 
 sub key2id($)
 {
-	$_ = shift;
+	local $_ = shift;
 	s/\s+/-/g;
 	return $_;
 }
 
 sub htmlify($)
 {
-	$_ = shift; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; return $_;
+	local $_ = shift; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; return $_;
 }
 
 sub esc($)
 {
-	$_ = shift;
-	my @l = split(/\n/,$_);
+	local $_ = shift;
+	my @l = split /\n/;
 	my $s = '';
 	for (@l) {
 		if (m|</code>|) { $s = ''; }
@@ -266,8 +266,8 @@ sub markdown
 	my ($code, $config) = @_;
 
 	# drop the comments
-	$code =~ s|^//.*\n||gm;
-	$code =~ s|(\S)\s+//.*|$1|g;
+	#$code =~ s|^//.*\n||gm;
+	#$code =~ s|(\S)\s+//.*|$1|g;
 
 	my ($fh, $file) = tempfile;
 	binmode($fh, ":utf8");
@@ -282,10 +282,10 @@ sub markdown
 
 sub pretty($)
 {
-	$_ = esc(shift);
+	local $_ = esc(shift);
 	s/<code>(\s*\n)*/<pre><code>/g;
 	s#\s*\n\s*</code>#</code></pre>#g;
-	$_ = markdown($_);
+	local $_ = markdown($_);
 	s#([^\\]|^)\$([a-zA-Z0-9_]+)#$1<var>$2</var>#g;
 	s/([^\\])@([a-zA-Z0-9_]+)/$1<a href="#$2">$2<\/a>/g;
 	s/\\(\$|@)/$1/g;
@@ -294,14 +294,14 @@ sub pretty($)
 
 sub summary($)
 {
-	$_ = shift;
+	local $_ = shift;
 	s/\n\n+.*//s;
 	return $_;
 }
 
 sub detail($)
 {
-	$_ = shift;
+	local $_ = shift;
 	s/[^\n]*\n\n+//;
 	return $_;
 }
