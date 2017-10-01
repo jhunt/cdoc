@@ -272,7 +272,7 @@ sub markdown
 	my ($fh, $file) = tempfile;
 	binmode($fh, ":utf8");
 	print $fh $code; close $fh;
-	$code = qx(/usr/bin/markdown --html4tags <$file);
+	$code = qx(markdown --html4tags <$file);
 	unlink $file;
 
 	$code =~ s/^\s+//;
